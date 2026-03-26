@@ -2,11 +2,12 @@ import {
   APICallError,
   InvalidResponseDataError,
   type LanguageModelV2,
-  type LanguageModelV2CallWarning,
-  type LanguageModelV2Content,
+  type LanguageModelV2CallOptions,
   type LanguageModelV2FinishReason,
+  type LanguageModelV2Content,
   type LanguageModelV2StreamPart,
   type SharedV2ProviderMetadata,
+  type LanguageModelV2CallWarning,
 } from "@ai-sdk/provider"
 import {
   combineHeaders,
@@ -98,7 +99,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
     seed,
     toolChoice,
     tools,
-  }: Parameters<LanguageModelV2["doGenerate"]>[0]) {
+  }: LanguageModelV2CallOptions) {
     const warnings: LanguageModelV2CallWarning[] = []
 
     // Parse provider options
@@ -116,14 +117,13 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
     )
 
     if (topK != null) {
-      warnings.push({ type: "unsupported-setting", setting: "topK" })
+      warnings.push({ type: "other", message: "Unsupported setting: topK" })
     }
 
     if (responseFormat?.type === "json" && responseFormat.schema != null && !this.supportsStructuredOutputs) {
       warnings.push({
-        type: "unsupported-setting",
-        setting: "responseFormat",
-        details: "JSON response format schema is only supported with structuredOutputs",
+        type: "other",
+        message: "Unsupported setting: responseFormat (JSON schema requires structuredOutputs)",
       })
     }
 
@@ -189,9 +189,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
     }
   }
 
-  async doGenerate(
-    options: Parameters<LanguageModelV2["doGenerate"]>[0],
-  ): Promise<Awaited<ReturnType<LanguageModelV2["doGenerate"]>>> {
+  async doGenerate(options: LanguageModelV2CallOptions) {
     const { args, warnings } = await this.getArgs({ ...options })
 
     const body = JSON.stringify(args)
@@ -294,9 +292,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
     }
   }
 
-  async doStream(
-    options: Parameters<LanguageModelV2["doStream"]>[0],
-  ): Promise<Awaited<ReturnType<LanguageModelV2["doStream"]>>> {
+  async doStream(options: LanguageModelV2CallOptions) {
     const { args, warnings } = await this.getArgs({ ...options })
 
     const body = {
@@ -332,7 +328,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
       hasFinished: boolean
     }> = []
 
-    let finishReason: LanguageModelV2FinishReason = "unknown"
+    let finishReason: LanguageModelV2FinishReason = "other"
     const usage: {
       completionTokens: number | undefined
       completionTokensDetails: {
@@ -671,11 +667,11 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV2 {
               type: "finish",
               finishReason,
               usage: {
-                inputTokens: usage.promptTokens ?? undefined,
-                outputTokens: usage.completionTokens ?? undefined,
-                totalTokens: usage.totalTokens ?? undefined,
-                reasoningTokens: usage.completionTokensDetails.reasoningTokens ?? undefined,
-                cachedInputTokens: usage.promptTokensDetails.cachedTokens ?? undefined,
+                inputTokens: usage.promptTokens,
+                outputTokens: usage.completionTokens,
+                totalTokens: usage.totalTokens,
+                reasoningTokens: usage.completionTokensDetails.reasoningTokens,
+                cachedInputTokens: usage.promptTokensDetails.cachedTokens,
               },
               providerMetadata,
             })

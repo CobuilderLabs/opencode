@@ -123,7 +123,7 @@ describe("doStream", () => {
       { type: "text-delta", id: "txt-0", delta: " world" },
       { type: "text-delta", id: "txt-0", delta: "!" },
       { type: "text-end", id: "txt-0" },
-      { type: "finish", finishReason: "stop" },
+      { type: "finish", finishReason: { unified: "stop" } },
     ])
   })
 
@@ -201,10 +201,10 @@ describe("doStream", () => {
     const finish = parts.find((p) => p.type === "finish")
     expect(finish).toMatchObject({
       type: "finish",
-      finishReason: "tool-calls",
+      finishReason: { unified: "tool-calls" },
       usage: {
-        inputTokens: 19581,
-        outputTokens: 53,
+        inputTokens: { total: 19581 },
+        outputTokens: { total: 53 },
       },
     })
   })
@@ -256,10 +256,10 @@ describe("doStream", () => {
     const finish = parts.find((p) => p.type === "finish")
     expect(finish).toMatchObject({
       type: "finish",
-      finishReason: "stop",
+      finishReason: { unified: "stop" },
       usage: {
-        inputTokens: 5778,
-        outputTokens: 59,
+        inputTokens: { total: 5778 },
+        outputTokens: { total: 59 },
       },
       providerMetadata: {
         copilot: {
@@ -315,7 +315,7 @@ describe("doStream", () => {
     const finish = parts.find((p) => p.type === "finish")
     expect(finish).toMatchObject({
       type: "finish",
-      finishReason: "stop",
+      finishReason: { unified: "stop" },
     })
   })
 
@@ -388,10 +388,10 @@ describe("doStream", () => {
     const finish = parts.find((p) => p.type === "finish")
     expect(finish).toMatchObject({
       type: "finish",
-      finishReason: "tool-calls",
+      finishReason: { unified: "tool-calls" },
       usage: {
-        inputTokens: 3767,
-        outputTokens: 19,
+        inputTokens: { total: 3767 },
+        outputTokens: { total: 19 },
       },
     })
   })
@@ -449,7 +449,7 @@ describe("doStream", () => {
     const finish = parts.find((p) => p.type === "finish")
     expect(finish).toMatchObject({
       type: "finish",
-      finishReason: "tool-calls",
+      finishReason: { unified: "tool-calls" },
     })
   })
 

@@ -1,7 +1,7 @@
 import {
-  type LanguageModelV2CallWarning,
   type LanguageModelV2Prompt,
   type LanguageModelV2ToolCallPart,
+  type LanguageModelV2CallWarning,
   UnsupportedFunctionalityError,
 } from "@ai-sdk/provider"
 import { convertToBase64, parseProviderOptions } from "@ai-sdk/provider-utils"
@@ -36,6 +36,7 @@ export async function convertToOpenAIResponsesInput({
 }> {
   const input: OpenAIResponsesInput = []
   const warnings: Array<LanguageModelV2CallWarning> = []
+  const processedApprovalIds = new Set<string>()
 
   for (const { role, content } of prompt) {
     switch (role) {
@@ -251,22 +252,54 @@ export async function convertToOpenAIResponsesInput({
 
       case "tool": {
         for (const part of content) {
-          const output = part.output
+          const result = part as any
+          if (result.type === "tool-approval-response") {
+            if (processedApprovalIds.has(result.approvalId)) {
+              continue
+            }
+            processedApprovalIds.add(result.approvalId)
 
-          if (hasLocalShellTool && part.toolName === "local_shell" && output.type === "json") {
+            if (store) {
+              input.push({
+                type: "item_reference",
+                id: result.approvalId,
+              })
+            }
+
+            input.push({
+              type: "mcp_approval_response",
+              approval_request_id: result.approvalId,
+              approve: result.approved,
+            })
+            continue
+          }
+          const output = result.output as any
+
+          if (output.type === "execution-denied") {
+            const approvalId = (output.providerOptions?.openai as { approvalId?: string } | undefined)?.approvalId
+
+            if (approvalId) {
+              continue
+            }
+          }
+
+          if (hasLocalShellTool && result.toolName === "local_shell" && output.type === "json") {
             input.push({
               type: "local_shell_call_output",
-              call_id: part.toolCallId,
+              call_id: result.toolCallId,
               output: localShellOutputSchema.parse(output.value).output,
             })
             break
           }
 
-          let contentValue: string
+          let contentValue = ""
           switch (output.type) {
             case "text":
             case "error-text":
               contentValue = output.value
+              break
+            case "execution-denied":
+              contentValue = output.reason ?? "Tool execution denied."
               break
             case "content":
             case "json":
@@ -277,7 +310,7 @@ export async function convertToOpenAIResponsesInput({
 
           input.push({
             type: "function_call_output",
-            call_id: part.toolCallId,
+            call_id: result.toolCallId,
             output: contentValue,
           })
         }

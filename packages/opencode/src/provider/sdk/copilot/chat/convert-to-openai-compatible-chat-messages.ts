@@ -1,12 +1,12 @@
 import {
   type LanguageModelV2Prompt,
-  type SharedV2ProviderMetadata,
+  type SharedV2ProviderOptions,
   UnsupportedFunctionalityError,
 } from "@ai-sdk/provider"
 import type { OpenAICompatibleChatPrompt } from "./openai-compatible-api-types"
 import { convertToBase64 } from "@ai-sdk/provider-utils"
 
-function getOpenAIMetadata(message: { providerOptions?: SharedV2ProviderMetadata }) {
+function getOpenAIMetadata(message: { providerOptions?: SharedV2ProviderOptions }) {
   return message?.providerOptions?.copilot ?? {}
 }
 
@@ -127,13 +127,20 @@ export function convertToOpenAICompatibleChatMessages(prompt: LanguageModelV2Pro
 
       case "tool": {
         for (const toolResponse of content) {
-          const output = toolResponse.output
+          const part = toolResponse as any
+          if (part.type === "tool-approval-response") {
+            continue
+          }
+          const output = part.output as any
 
-          let contentValue: string
+          let contentValue = ""
           switch (output.type) {
             case "text":
             case "error-text":
               contentValue = output.value
+              break
+            case "execution-denied":
+              contentValue = output.reason ?? "Tool execution denied."
               break
             case "content":
             case "json":
@@ -145,7 +152,7 @@ export function convertToOpenAICompatibleChatMessages(prompt: LanguageModelV2Pro
           const toolResponseMetadata = getOpenAIMetadata(toolResponse)
           messages.push({
             role: "tool",
-            tool_call_id: toolResponse.toolCallId,
+            tool_call_id: part.toolCallId,
             content: contentValue,
             ...toolResponseMetadata,
           })
