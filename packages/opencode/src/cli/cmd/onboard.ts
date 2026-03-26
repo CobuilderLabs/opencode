@@ -38,6 +38,10 @@ export const OnboardCommand = cmd({
     } else {
       await setupApiKeyProvider(providerChoice as string)
     }
+
+    await setupSecurity()
+
+    prompts.outro("All set! Run  cobuilder  to start coding.")
   },
 })
 
@@ -132,9 +136,7 @@ async function setup9Router() {
 
   await Filesystem.writeJson(configPath, updated)
 
-  prompts.log.success(`${chosenIds.length} model${chosenIds.length !== 1 ? "s" : ""} registered`)
   prompts.log.success(`Default model: ${NINEROUTER_ID}/${defaultModelId}`)
-  prompts.outro("All set! Run  opencode  to start coding.")
 }
 
 async function setupApiKeyProvider(providerId: string) {
@@ -170,5 +172,49 @@ async function setupApiKeyProvider(providerId: string) {
   await Filesystem.writeJson(authPath, existing, 0o600)
 
   prompts.log.success(`${name} connected`)
-  prompts.outro("All set! Run  opencode  to start coding.")
+}
+
+const ALL_SECURITY_MODULES = [
+  { value: "ssrf", label: "SSRF protection", hint: "Blocks requests to internal IPs and cloud metadata endpoints" },
+  { value: "promptInjection", label: "Prompt injection detection", hint: "Scans input for override and jailbreak patterns" },
+  { value: "pathTraversal", label: "Path traversal prevention", hint: "Blocks ../ escapes and NUL byte injection" },
+  { value: "auditLog", label: "Audit log", hint: "SHA-256 chained append-only log of sensitive operations" },
+  { value: "rateLimiting", label: "Rate limiting", hint: "Token-bucket rate limiting in server mode" },
+  { value: "headers", label: "Security headers", hint: "CSP, X-Frame-Options, HSTS, and more" },
+] as const
+
+async function setupSecurity() {
+  prompts.log.step("Step 2 of 2 — Security modules")
+
+  const selected = await prompts.multiselect({
+    message: "Which security modules should be enabled?",
+    options: ALL_SECURITY_MODULES.map((m) => ({ ...m })),
+    initialValues: ALL_SECURITY_MODULES.map((m) => m.value),
+    required: false,
+  })
+
+  if (prompts.isCancel(selected)) return
+
+  const enabledSet = new Set(selected as string[])
+  const allKeys = ALL_SECURITY_MODULES.map((m) => m.value)
+  const disabled = allKeys.filter((k) => !enabledSet.has(k))
+
+  if (disabled.length === 0) {
+    prompts.log.info("All security modules enabled (default)")
+    return
+  }
+
+  const securityConfig: Record<string, { enabled: false }> = {}
+  for (const mod of disabled) securityConfig[mod] = { enabled: false }
+
+  const configPath = path.join(Global.Path.config, "opencode.json")
+  let existing: any = {}
+  try { existing = await Filesystem.readJson(configPath) } catch {}
+
+  await Filesystem.writeJson(configPath, {
+    ...existing,
+    security: { ...existing?.security, ...securityConfig },
+  })
+
+  prompts.log.success(`${disabled.length} module${disabled.length !== 1 ? "s" : ""} disabled: ${disabled.join(", ")}`)
 }
