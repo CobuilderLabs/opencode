@@ -6,6 +6,7 @@ import { Filesystem } from "../../util/filesystem"
 import { validateProviderURL } from "../../security"
 import { Config } from "../../config/config"
 import { Workflow } from "../../workflow"
+import { RECOMMENDED_TOOLS } from "../../mcp/recommended"
 import path from "path"
 
 const NINEROUTER_ID = "9router"
@@ -52,6 +53,7 @@ export const OnboardCommand = cmd({
 
     await setupSecurity()
     await setupWorkflows()
+    await setupRecommendedTools()
 
     prompts.outro("All set! Run  cobuilder  to start coding.")
   },
@@ -294,6 +296,75 @@ async function setupWorkflows() {
     } catch (e) {
       spin.stop(`${alias} failed`)
       prompts.log.warn(e instanceof Error ? e.message : `Could not install ${alias} — try  cobuilder workflow add ${alias}  later`)
+    }
+  }
+}
+
+async function setupRecommendedTools() {
+  const configPath = path.join(Global.Path.config, "opencode.json")
+
+  // Read current config to skip already-installed tools
+  let existing: any = {}
+  try {
+    existing = await Filesystem.readJson(configPath)
+  } catch {}
+
+  const alreadyConfigured = new Set(Object.keys(existing?.mcp ?? {}))
+  const available = RECOMMENDED_TOOLS.filter((t) => !alreadyConfigured.has(t.id))
+
+  if (available.length === 0) {
+    prompts.log.info("Recommended tools — all already installed")
+    return
+  }
+
+  prompts.log.step("Recommended tools — extend CoBuilder with community extensions")
+
+  const selected = await prompts.multiselect({
+    message: "Which recommended tools would you like to install?",
+    options: available.map((t) => ({
+      value: t.id,
+      label: `${t.label}  ${t.source}`,
+      hint: t.hint,
+    })),
+    initialValues: [],
+    required: false,
+  })
+
+  if (prompts.isCancel(selected) || (selected as string[]).length === 0) {
+    prompts.log.info("No tools installed — you can add them anytime via  cobuilder mcp")
+    return
+  }
+
+  const toInstall = RECOMMENDED_TOOLS.filter((t) => (selected as string[]).includes(t.id))
+
+  for (const tool of toInstall) {
+    const spin = prompts.spinner()
+    spin.start(`Installing ${tool.label}…`)
+    try {
+      if (tool.type === "mcp" && tool.mcpConfig) {
+        // Write MCP config to opencode.json
+        let cfg: any = {}
+        try { cfg = await Filesystem.readJson(configPath) } catch {}
+        await Filesystem.writeJson(configPath, {
+          ...cfg,
+          mcp: { ...cfg?.mcp, [tool.id]: tool.mcpConfig },
+        })
+        spin.stop(`${tool.label} configured`)
+      } else if (tool.type === "cli" && tool.installCommands) {
+        // Run install commands sequentially
+        for (const cmd of tool.installCommands) {
+          const parts = cmd.split(" ")
+          const proc = Bun.spawn(parts, { stdout: "pipe", stderr: "pipe" })
+          const code = await proc.exited
+          if (code !== 0) throw new Error(`Command failed: ${cmd}`)
+        }
+        spin.stop(`${tool.label} installed`)
+      }
+    } catch (e) {
+      spin.stop(`${tool.label} failed`)
+      prompts.log.warn(
+        `Could not install ${tool.label} automatically.\n  Manual install: ${tool.manualInstall}\n  Source: ${tool.source}`,
+      )
     }
   }
 }
