@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-03-26
 **Current phase:** Phase 2 — Workflow Plugin System
-**Stopped at:** Phase 1 complete — PR #10 open (feat/phase1-wave2 → main)
+**Stopped at:** Phase 1 merged to main — Phase 2 PR #11 open
 
 ## Project Reference
 
@@ -15,8 +15,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | Modular Security System | ✅ Complete — PR #10 open |
-| 2 | Workflow Plugin System | 🔄 In progress |
+| 1 | Modular Security System | ✅ Complete — merged to main |
+| 2 | Workflow Plugin System | 🔄 In progress — PR #11 open |
 
 ## What's Shipped (Phase 0 — already in main)
 
