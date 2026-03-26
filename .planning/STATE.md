@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-03-26
 **Current phase:** Phase 3 — UI/UX Polish
-**Stopped at:** Phase 3 Plan 1 complete — 03-01-SUMMARY.md written, branch feat/phase3-ui-ux-polish
+**Stopped at:** Phase 3 Plan 2 complete — 03-02-SUMMARY.md written, branch feat/phase3-ui-ux-polish
 
 ## Project Reference
 
@@ -17,7 +17,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 |-------|------|--------|
 | 1 | Modular Security System | ✅ Complete — PR #10 open |
 | 2 | Workflow Plugin System | ✅ Complete |
-| 3 | UI/UX Polish | 🔄 In progress — Plan 1 complete |
+| 3 | UI/UX Polish | 🔄 In progress — Plan 2 complete |
 
 ## What's Shipped (Phase 0 — already in main)
 
@@ -51,3 +51,5 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 | 2026-03-26 | security Zod schema inserted before .strict() | Required for TypeScript to accept the key |
 | 2026-03-26 | onMount once-guard removed (UX-13) | onMount runs once per mount — module-level flag was redundant |
 | 2026-03-26 | footer /connect hint made reactive (UX-11) | createEffect replaces timer cycling — deterministic visibility |
+| 2026-03-26 | __OPENCODE__ renamed to __COBUILDER__ across all 8 referencing files | Consistent global rename; plan only specified 2 files but grep found 8 |
+| 2026-03-26 | Electron menu cross-platform via isMac conditional (UX-03) | darwin: app submenu + hide roles; Win/Linux: Quit in File, Check for Updates in Help |
