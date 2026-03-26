@@ -253,12 +253,12 @@ The `dev` branch receives automated weekly syncs from [anomalyco/opencode](https
 
 ## Contributing
 
-1. Branch from `main`: `git checkout -b feature/your-feature`
+1. Fork the repo and branch from `main`: `git checkout -b feat/your-feature`
 2. Commit with [Conventional Commit](https://www.conventionalcommits.org/) messages (`feat:`, `fix:`, `docs:`, etc.)
 3. Open a pull request — CI runs automatically
-4. Squash-merge once approved and green
+4. A maintainer will review and squash-merge once CI is green
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
+> **Maintainers:** PRs from org members bypass the review requirement — squash-merge directly once CI passes.
 
 ---
 
