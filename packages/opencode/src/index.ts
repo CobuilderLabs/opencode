@@ -14,7 +14,6 @@ import { Installation } from "./installation"
 import { NamedError } from "@opencode-ai/util/error"
 import { FormatError } from "./cli/error"
 import { ServeCommand } from "./cli/cmd/serve"
-import { WorkspaceServeCommand } from "./cli/cmd/workspace-serve"
 import { Filesystem } from "./util/filesystem"
 import { DebugCommand } from "./cli/cmd/debug"
 import { StatsCommand } from "./cli/cmd/stats"
@@ -152,12 +151,6 @@ let cli = yargs(hideBin(process.argv))
   .command(SessionCommand)
   .command(DbCommand)
   .command(OnboardCommand)
-
-if (Installation.isLocal()) {
-  cli = cli.command(WorkspaceServeCommand)
-}
-
-cli = cli
   .fail((msg, err) => {
     if (
       msg?.startsWith("Unknown argument") ||
