@@ -13,6 +13,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import { type Duration, Effect } from "effect"
 import {
   type Component,
+  createEffect,
   createMemo,
   createResource,
   createSignal,
@@ -128,13 +129,18 @@ function OnboardingCheck() {
 
   onMount(() => {
     if (wasOnboardingShown()) return
-    // Give sync a moment to populate connected providers
-    setTimeout(() => {
+    // Use a reactive createEffect that fires when provider data is first loaded
+    // from the server — avoids the 800ms setTimeout race condition where the
+    // check runs before sync has populated provider data.
+    let checked = false
+    createEffect(() => {
       const connected = globalSync.data.provider.connected
+      if (checked) return
+      checked = true
       if (connected.length === 0) {
         dialog.show(() => <DialogOnboarding />)
       }
-    }, 800)
+    })
   })
 
   return null
