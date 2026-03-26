@@ -1,8 +1,8 @@
 # CoBuilder — Project State
 
 **Last updated:** 2026-03-26
-**Current phase:** Phase 1 — Modular Security System (Plan 1 complete, Plan 2 next)
-**Stopped at:** Completed 01-01-PLAN.md
+**Current phase:** Phase 2 — Workflow Plugin System
+**Stopped at:** Phase 1 complete — PR #10 open (feat/phase1-wave2 → main)
 
 ## Project Reference
 
@@ -15,8 +15,8 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | Modular Security System | 🔄 In progress (1/N plans done) |
-| 2 | Workflow Plugin System | ⏳ Pending Phase 1 |
+| 1 | Modular Security System | ✅ Complete — PR #10 open |
+| 2 | Workflow Plugin System | 🔄 In progress |
 
 ## What's Shipped (Phase 0 — already in main)
 
