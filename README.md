@@ -30,7 +30,7 @@ Pre-built binaries are available for every major platform — [**latest release 
 | Linux (x64) | [`cobuilder-linux-x64.tar.gz`](https://github.com/CobuilderLabs/opencode/releases/latest/download/cobuilder-linux-x64.tar.gz) |
 | Linux (ARM64) | [`cobuilder-linux-arm64.tar.gz`](https://github.com/CobuilderLabs/opencode/releases/latest/download/cobuilder-linux-arm64.tar.gz) |
 
-> **Desktop App (BETA)** — download the `.dmg` (macOS), `.exe` (Windows), or `.AppImage` (Linux) from the [latest release →](https://github.com/CobuilderLabs/opencode/releases/latest)
+> **Desktop App** — native GUI coming soon.
 
 ---
 
