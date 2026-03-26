@@ -219,7 +219,7 @@ export namespace ProviderTransform {
 
       if (shouldUseContentOptions) {
         const lastContent = msg.content[msg.content.length - 1]
-        if (lastContent && typeof lastContent === "object") {
+        if (lastContent && typeof lastContent === "object" && "providerOptions" in lastContent) {
           lastContent.providerOptions = mergeDeep(lastContent.providerOptions ?? {}, providerOptions)
           continue
         }
@@ -301,7 +301,9 @@ export namespace ProviderTransform {
         return {
           ...msg,
           providerOptions: remap(msg.providerOptions),
-          content: msg.content.map((part) => ({ ...part, providerOptions: remap(part.providerOptions) })),
+          content: msg.content.map((part) =>
+            "providerOptions" in part ? { ...part, providerOptions: remap(part.providerOptions) } : part,
+          ),
         } as typeof msg
       })
     }

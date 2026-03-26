@@ -206,6 +206,28 @@ export namespace LLM {
       }
     }
 
+    const model =
+      language.specificationVersion === "v3"
+        ? wrapLanguageModel({
+            model: language,
+            middleware: [
+              {
+                specificationVersion: "v3" as const,
+                async transformParams(args) {
+                  if (args.type === "stream") {
+                    args.params.prompt = ProviderTransform.message(
+                      args.params.prompt as any,
+                      input.model,
+                      options,
+                    ) as typeof args.params.prompt
+                  }
+                  return args.params
+                },
+              },
+            ],
+          })
+        : language
+
     return streamText({
       onError(error) {
         l.error("stream error", {
@@ -258,22 +280,7 @@ export namespace LLM {
       },
       maxRetries: input.retries ?? 0,
       messages,
-      model: wrapLanguageModel({
-        model: language,
-        middleware: [
-          {
-            middlewareVersion: "v2" as const,
-            async transformParams(args) {
-              if (args.type === "stream") {
-                // TODO: verify that LanguageModelV2Prompt is still compat here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                // @ts-expect-error
-                args.params.prompt = ProviderTransform.message(args.params.prompt, input.model, options)
-              }
-              return args.params
-            },
-          },
-        ],
-      }),
+      model,
       experimental_telemetry: {
         isEnabled: cfg.experimental?.openTelemetry,
         metadata: {
