@@ -5,6 +5,7 @@ import { Global } from "../global"
 import { Filesystem } from "../util/filesystem"
 import { ConfigMarkdown } from "../config/markdown"
 import { resolveSource } from "./registry"
+import { validateWorkflowPath } from "./sandbox"
 import { Log } from "../util/log"
 import fs from "fs/promises"
 
@@ -76,6 +77,9 @@ export namespace Workflow {
     // Derive target directory name from URL basename (strip .git suffix)
     const urlName = url.split("/").pop()?.replace(/\.git$/, "") ?? source
     const destDir = path.join(workflowsDir(), urlName)
+
+    // Sandbox check: destDir must stay inside workflowsDir()
+    validateWorkflowPath(destDir)
 
     // Ensure workflows directory exists
     await fs.mkdir(workflowsDir(), { recursive: true })
