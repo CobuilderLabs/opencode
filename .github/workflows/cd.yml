@@ -238,7 +238,7 @@ jobs:
   desktop-mac:
     name: Desktop (macOS)
     needs: release
-    if: needs.release.outputs.skip != 'true'
+    if: false # TODO: enable when Apple signing certs are available (CSC_LINK, CSC_KEY_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID)
     runs-on: macos-latest
     timeout-minutes: 60
     steps:
