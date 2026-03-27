@@ -26,6 +26,7 @@ import type { FilePart } from "@opencode-ai/sdk/v2"
 import { TuiEvent } from "../../event"
 import { iife } from "@/util/iife"
 import { Locale } from "@/util/locale"
+import { Flag } from "@/flag/flag"
 import { formatDuration } from "@/util/format"
 import { createColors, createFrames } from "../../ui/spinner.ts"
 import { useDialog } from "@tui/ui/dialog"
@@ -1030,6 +1031,10 @@ export function Prompt(props: PromptProps) {
               <text fg={highlight()}>
                 {store.mode === "shell" ? "Shell" : Locale.titlecase(local.agent.current().name)}{" "}
               </text>
+              <Show when={Flag.COBUILDER_AUTOPILOT}>
+                <text><span style={{ fg: theme.warning, bold: true }}>autopilot</span></text>
+                <text fg={theme.textMuted}>·</text>
+              </Show>
               <Show when={store.mode === "normal"}>
                 <box flexDirection="row" gap={1}>
                   <text flexShrink={0} fg={keybind.leader ? theme.textMuted : theme.text}>
