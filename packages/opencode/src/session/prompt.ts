@@ -676,7 +676,7 @@ export namespace SessionPrompt {
       const skills = await SystemPrompt.skills(agent)
       const memoryContext = step === 1 ? await SystemPrompt.memory(session.directory) : ""
       const system = [
-        ...(await SystemPrompt.environment(model)),
+        ...(await SystemPrompt.environment(model, agent)),
         ...(skills ? [skills] : []),
         ...(await InstructionPrompt.system()),
         ...(memoryContext ? [memoryContext] : []),
