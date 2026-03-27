@@ -294,25 +294,28 @@ jobs:
 
       # Bun runs electron-vite from an isolated .bun cache dir that lacks
       # peer deps (picocolors) on Windows. Use npm+npx instead.
-      # catalog: entries must be resolved first since npm doesn't understand them.
+      # catalog: entries (under workspaces.catalog in root package.json) must be
+      # resolved first since npm doesn't understand Bun's catalog protocol.
       - name: Resolve catalog deps and install with npm (Windows)
-        shell: pwsh
+        shell: bash
         run: |
-          $catalog = (Get-Content package.json | ConvertFrom-Json).catalog
-          $pkg = Get-Content packages/desktop-electron/package.json | ConvertFrom-Json
-          foreach ($section in @("dependencies","devDependencies")) {
-            $deps = $pkg.$section
-            if (-not $deps) { continue }
-            $deps.PSObject.Properties | ForEach-Object {
-              if ($_.Value -eq "catalog:") {
-                $resolved = $catalog.($_.Name)
-                if ($resolved) { $deps.($_.Name) = $resolved }
+          node -e "
+            const fs = require('fs');
+            const root = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const catalog = (root.workspaces && root.workspaces.catalog) || {};
+            const pkgPath = 'packages/desktop-electron/package.json';
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            for (const section of ['dependencies', 'devDependencies']) {
+              if (!pkg[section]) continue;
+              for (const [name, version] of Object.entries(pkg[section])) {
+                if (version === 'catalog:' && catalog[name]) {
+                  pkg[section][name] = catalog[name];
+                }
               }
             }
-          }
-          $pkg | ConvertTo-Json -Depth 10 | Set-Content packages/desktop-electron/package.json
-          cd packages/desktop-electron
-          npm install --legacy-peer-deps
+            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+          "
+          cd packages/desktop-electron && npm install --legacy-peer-deps
 
       - name: Build
         run: cd packages/desktop-electron && npx electron-vite build
