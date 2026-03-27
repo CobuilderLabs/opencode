@@ -194,13 +194,11 @@ export function BasicTool(props: BasicToolProps) {
   }
 
   return (
+    <div ref={toolRef} onKeyDown={handleToolKeyDown} tabIndex={-1} class="tool-collapsible-wrapper">
     <Collapsible
       open={open()}
       onOpenChange={handleOpenChange}
       class="tool-collapsible"
-      ref={toolRef}
-      onKeyDown={handleToolKeyDown}
-      tabIndex={-1}
     >
       <Collapsible.Trigger>
         <div data-component="tool-trigger">
@@ -317,6 +315,7 @@ export function BasicTool(props: BasicToolProps) {
         </Collapsible.Content>
       </Show>
     </Collapsible>
+    </div>
   )
 }
 
