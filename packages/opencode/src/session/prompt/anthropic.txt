@@ -80,13 +80,13 @@ Use GSD for ANY of these (do not answer inline):
 - Any multi-step implementation task
 
 How to invoke:
-1. For freeform requests → load skill `gsd:do` (it auto-routes)
-2. For "recommend / improve / design" → load skill `gsd:discuss-phase`
-3. For "build / implement / fix" → load skill `gsd:discuss-phase` then `gsd:plan-phase`
-4. For quick one-liner tasks → load skill `gsd:fast`
+1. Load skill `gsd` — it handles all routing internally
+2. Complete the FULL analysis or plan in one response — do NOT ask "what would you like to do next?" when the intent was clear
+3. For quick one-liner tasks — handle inline without loading GSD
 
 **Never run `which gsd` or check for a gsd binary. GSD is a skill, not a CLI tool.**
-**Never dump a bullet list of recommendations inline — use `gsd:discuss-phase` instead.**
+**Never load `gsd:do`, `gsd:discuss-phase`, or other sub-skills — load `gsd` only.**
+**Complete the task autonomously. Only ask questions if you are genuinely blocked.**
 
 # Doing tasks
 The user will primarily request you perform software engineering tasks. This includes solving bugs, adding new functionality, refactoring code, explaining code, and more. For these tasks the following steps are recommended:
