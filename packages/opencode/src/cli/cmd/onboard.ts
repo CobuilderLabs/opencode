@@ -35,6 +35,8 @@ export const OnboardCommand = cmd({
       message: "Which provider would you like to use?",
       options: [
         { value: "9router", label: "9Router", hint: "Local OpenAI-compatible proxy" },
+        { value: "opencode", label: "CoBuilder Zen", hint: "Curated, tested models via API key" },
+        { value: "github-copilot", label: "GitHub Copilot", hint: "Free for GitHub subscribers (OAuth)" },
         { value: "anthropic", label: "Anthropic", hint: "Claude models via API key" },
         { value: "openai", label: "OpenAI", hint: "GPT models via API key" },
         { value: "openrouter", label: "OpenRouter", hint: "Many providers via one API key" },
@@ -49,6 +51,8 @@ export const OnboardCommand = cmd({
 
     if (providerChoice === NINEROUTER_ID) {
       await setup9Router()
+    } else if (providerChoice === "github-copilot") {
+      await setupGitHubCopilot()
     } else {
       await setupApiKeyProvider(providerChoice as string)
     }
@@ -158,8 +162,29 @@ async function setup9Router() {
   prompts.log.success(`Default model: ${NINEROUTER_ID}/${defaultModelId}`)
 }
 
+async function setupGitHubCopilot() {
+  prompts.log.info(
+    "GitHub Copilot uses GitHub OAuth — this requires the interactive login flow.\n" +
+    "  After setup completes, run:  cobuilder providers connect github-copilot",
+  )
+
+  const configPath = path.join(Global.Path.config, "opencode.json")
+  let existing: any = {}
+  try {
+    existing = await Filesystem.readJson(configPath)
+  } catch {}
+
+  await Filesystem.writeJson(configPath, {
+    ...existing,
+    model: "github-copilot/gpt-4o",
+  })
+
+  prompts.log.success("GitHub Copilot selected — run  cobuilder providers connect github-copilot  to complete OAuth")
+}
+
 async function setupApiKeyProvider(providerId: string) {
   const names: Record<string, string> = {
+    opencode: "CoBuilder Zen",
     anthropic: "Anthropic",
     openai: "OpenAI",
     openrouter: "OpenRouter",
