@@ -543,7 +543,7 @@ export function SessionTurn(
                   </Collapsible>
                 </div>
               </Show>
-              <Show when={turnUsage() && !working()}>
+              <Show when={!working() && turnUsage()}>
                 {(usage) => (
                   <div data-slot="session-turn-usage" class="px-4 md:px-5 pt-1 pb-0.5 flex items-center gap-2 text-[11px] text-text-weak opacity-60 select-none">
                     <span>↑ {fmt(usage().input)}</span>
