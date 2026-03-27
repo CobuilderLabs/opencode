@@ -4,17 +4,31 @@ import { UI } from "../ui"
 import { Global } from "../../global"
 import { Filesystem } from "../../util/filesystem"
 import { validateProviderURL } from "../../security"
+import { Config } from "../../config/config"
+import { Workflow } from "../../workflow"
+import { RECOMMENDED_TOOLS } from "../../mcp/recommended"
 import path from "path"
 
 const NINEROUTER_ID = "9router"
 const NINEROUTER_NAME = "9Router"
 const NINEROUTER_DEFAULT_URL = "http://localhost:20123/v1"
 
+const ALL_SECURITY_MODULES = [
+  { value: "ssrf", label: "SSRF protection", hint: "Blocks requests to internal IPs and cloud metadata endpoints" },
+  { value: "promptInjection", label: "Prompt injection detection", hint: "Scans input for override and jailbreak patterns" },
+  { value: "pathTraversal", label: "Path traversal prevention", hint: "Blocks ../ escapes and NUL byte injection" },
+  { value: "auditLog", label: "Audit log", hint: "SHA-256 chained append-only log of sensitive operations" },
+  { value: "rateLimiting", label: "Rate limiting", hint: "Token-bucket rate limiting in server mode" },
+  { value: "headers", label: "Security headers", hint: "CSP, X-Frame-Options, HSTS, and more" },
+] as const
+
 export const OnboardCommand = cmd({
   command: "onboard",
   describe: "interactive setup — choose a provider and model to get started",
   async handler() {
     prompts.intro(UI.logo() + "\n  Welcome to CoBuilder — let's get you set up")
+
+    prompts.log.step("Step 1 of 4 — Choose your provider")
 
     // Step 1: Provider selection
     const providerChoice = await prompts.select({
@@ -40,6 +54,8 @@ export const OnboardCommand = cmd({
     }
 
     await setupSecurity()
+    await setupWorkflows()
+    await setupRecommendedTools()
 
     prompts.outro("All set! Run  cobuilder  to start coding.")
   },
@@ -63,11 +79,14 @@ async function setup9Router() {
 
   const baseURL = (urlInput as string).trim().replace(/\/+$/, "")
 
-  // SSRF validation
-  const ssrfCheck = validateProviderURL(baseURL, { allowLocalhost: true })
-  if (!ssrfCheck.ok) {
-    prompts.log.error(ssrfCheck.reason)
-    process.exit(1)
+  // SSRF validation (default-on: skipped only if explicitly disabled)
+  const cfg = await Config.get()
+  if (cfg.security?.ssrf?.enabled !== false) {
+    const ssrfCheck = validateProviderURL(baseURL, { allowLocalhost: true })
+    if (!ssrfCheck.ok) {
+      prompts.log.error(ssrfCheck.reason)
+      process.exit(1)
+    }
   }
 
   // Step 3: Test connection + fetch models
@@ -174,17 +193,8 @@ async function setupApiKeyProvider(providerId: string) {
   prompts.log.success(`${name} connected`)
 }
 
-const ALL_SECURITY_MODULES = [
-  { value: "ssrf", label: "SSRF protection", hint: "Blocks requests to internal IPs and cloud metadata endpoints" },
-  { value: "promptInjection", label: "Prompt injection detection", hint: "Scans input for override and jailbreak patterns" },
-  { value: "pathTraversal", label: "Path traversal prevention", hint: "Blocks ../ escapes and NUL byte injection" },
-  { value: "auditLog", label: "Audit log", hint: "SHA-256 chained append-only log of sensitive operations" },
-  { value: "rateLimiting", label: "Rate limiting", hint: "Token-bucket rate limiting in server mode" },
-  { value: "headers", label: "Security headers", hint: "CSP, X-Frame-Options, HSTS, and more" },
-] as const
-
 async function setupSecurity() {
-  prompts.log.step("Step 2 of 2 — Security modules")
+  prompts.log.step("Step 2 of 4 — Security modules")
 
   const selected = await prompts.multiselect({
     message: "Which security modules should be enabled?",
@@ -197,6 +207,7 @@ async function setupSecurity() {
 
   const enabledSet = new Set(selected as string[])
   const allKeys = ALL_SECURITY_MODULES.map((m) => m.value)
+
   const disabled = allKeys.filter((k) => !enabledSet.has(k))
 
   if (disabled.length === 0) {
@@ -204,17 +215,125 @@ async function setupSecurity() {
     return
   }
 
+  // Only write entries for explicitly disabled modules — enabled is the default
   const securityConfig: Record<string, { enabled: false }> = {}
-  for (const mod of disabled) securityConfig[mod] = { enabled: false }
+  for (const mod of disabled) {
+    securityConfig[mod] = { enabled: false }
+  }
 
   const configPath = path.join(Global.Path.config, "opencode.json")
   let existing: any = {}
-  try { existing = await Filesystem.readJson(configPath) } catch {}
+  try {
+    existing = await Filesystem.readJson(configPath)
+  } catch {}
 
   await Filesystem.writeJson(configPath, {
     ...existing,
     security: { ...existing?.security, ...securityConfig },
   })
 
-  prompts.log.success(`${disabled.length} module${disabled.length !== 1 ? "s" : ""} disabled: ${disabled.join(", ")}`)
+  prompts.log.success(
+    `${disabled.length} module${disabled.length !== 1 ? "s" : ""} disabled: ${disabled.join(", ")}`,
+  )
+}
+
+async function setupWorkflows() {
+  prompts.log.step("Step 3 of 4 — Workflow plugins (optional)")
+
+  const selected = await prompts.multiselect({
+    message: "Which workflow plugins would you like to install?",
+    options: [
+      { value: "gsd", label: "GSD", hint: "Get Shit Done — structured planning and execution methodology" },
+    ],
+    initialValues: [],
+    required: false,
+  })
+
+  if (prompts.isCancel(selected) || (selected as string[]).length === 0) {
+    prompts.log.info("No workflow plugins installed — run  cobuilder workflow add <name>  anytime")
+    return
+  }
+
+  const toInstall = selected as string[]
+
+  for (const alias of toInstall) {
+    const spin = prompts.spinner()
+    spin.start(`Installing ${alias}…`)
+    try {
+      await Workflow.install(alias)
+      spin.stop(`${alias} installed`)
+    } catch (e) {
+      spin.stop(`${alias} failed`)
+      prompts.log.warn(e instanceof Error ? e.message : `Could not install ${alias} — try  cobuilder workflow add ${alias}  later`)
+    }
+  }
+}
+
+async function setupRecommendedTools() {
+  const configPath = path.join(Global.Path.config, "opencode.json")
+
+  // Read current config to skip already-installed tools
+  let existing: any = {}
+  try {
+    existing = await Filesystem.readJson(configPath)
+  } catch {}
+
+  const alreadyConfigured = new Set(Object.keys(existing?.mcp ?? {}))
+  const available = RECOMMENDED_TOOLS.filter((t) => !alreadyConfigured.has(t.id))
+
+  if (available.length === 0) {
+    prompts.log.info("Recommended tools — all already installed")
+    return
+  }
+
+  prompts.log.step("Step 4 of 4 — Recommended tools (optional)")
+
+  const selected = await prompts.multiselect({
+    message: "Which recommended tools would you like to install?",
+    options: available.map((t) => ({
+      value: t.id,
+      label: `${t.label}  ${t.source}`,
+      hint: t.hint,
+    })),
+    initialValues: [],
+    required: false,
+  })
+
+  if (prompts.isCancel(selected) || (selected as string[]).length === 0) {
+    prompts.log.info("No tools installed — you can add them anytime via  cobuilder mcp")
+    return
+  }
+
+  const toInstall = RECOMMENDED_TOOLS.filter((t) => (selected as string[]).includes(t.id))
+
+  for (const tool of toInstall) {
+    const spin = prompts.spinner()
+    spin.start(`Installing ${tool.label}…`)
+    try {
+      if (tool.type === "mcp" && tool.mcpConfig) {
+        // Write MCP config to opencode.json
+        let cfg: any = {}
+        try { cfg = await Filesystem.readJson(configPath) } catch {}
+        await Filesystem.writeJson(configPath, {
+          ...cfg,
+          mcp: { ...cfg?.mcp, [tool.id]: tool.mcpConfig },
+        })
+        spin.stop(`${tool.label} configured`)
+      } else if (tool.type === "cli" && tool.installCommands) {
+        // Run install commands sequentially
+        for (const cmd of tool.installCommands) {
+          const parts = cmd.split(" ")
+          const proc = Bun.spawn(parts, { stdout: "pipe", stderr: "pipe" })
+          const code = await proc.exited
+          if (code !== 0) throw new Error(`Command failed: ${cmd}`)
+        }
+        spin.stop(`${tool.label} installed`)
+      }
+    } catch (e) {
+      spin.stop(`${tool.label} failed`)
+      prompts.log.warn(
+        `Could not install ${tool.label} automatically.\n  Manual install: ${tool.manualInstall}\n  Source: ${tool.source}`,
+      )
+    }
+  }
 }

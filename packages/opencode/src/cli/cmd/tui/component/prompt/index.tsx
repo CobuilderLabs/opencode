@@ -1029,11 +1029,14 @@ export function Prompt(props: PromptProps) {
             />
             <box flexDirection="row" flexShrink={0} paddingTop={1} gap={1}>
               <text fg={highlight()}>
-                {store.mode === "shell" ? "Shell" : Locale.titlecase(local.agent.current().name)}{" "}
+                {Flag.COBUILDER_AUTOPILOT
+                  ? ""
+                  : store.mode === "shell"
+                    ? "Shell "
+                    : Locale.titlecase(local.agent.current().name) + " "}
               </text>
               <Show when={Flag.COBUILDER_AUTOPILOT}>
-                <text><span style={{ fg: theme.warning, bold: true }}>autopilot</span></text>
-                <text fg={theme.textMuted}>·</text>
+                <text><span style={{ fg: theme.warning, bold: true }}>Autopilot</span></text>
               </Show>
               <Show when={store.mode === "normal"}>
                 <box flexDirection="row" gap={1}>
