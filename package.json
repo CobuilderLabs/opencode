@@ -16,7 +16,8 @@
     "prepare": "husky",
     "random": "echo 'Random script'",
     "hello": "echo 'Hello World!'",
-    "test": "echo 'do not run tests from root' && exit 1"
+    "test": "echo 'do not run tests from root' && exit 1",
+    "test:e2e:tui": "bun test e2e/tui"
   },
   "workspaces": {
     "packages": [
@@ -78,6 +79,7 @@
     "@typescript/native-preview": "catalog:",
     "glob": "13.0.5",
     "husky": "9.1.7",
+    "node-pty": "1.1.0",
     "prettier": "3.6.2",
     "semver": "^7.6.0",
     "sst": "3.18.10",
