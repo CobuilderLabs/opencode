@@ -8,6 +8,7 @@ node_modules
 .codex
 *~
 playground
+**/test/bench/*-results.json
 tmp
 dist
 ts-dist
