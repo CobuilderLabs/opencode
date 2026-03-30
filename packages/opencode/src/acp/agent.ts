@@ -521,18 +521,18 @@ export namespace ACP {
       log.info("initialize", { protocolVersion: params.protocolVersion })
 
       const authMethod: AuthMethod = {
-        description: "Run `opencode auth login` in the terminal",
-        name: "Login with opencode",
-        id: "opencode-login",
+        description: "Run `cobuilder auth login` in the terminal",
+        name: "Login with CoBuilder",
+        id: "cobuilder-login",
       }
 
       // If client supports terminal-auth capability, use that instead.
       if (params.clientCapabilities?._meta?.["terminal-auth"] === true) {
         authMethod._meta = {
           "terminal-auth": {
-            command: "opencode",
+            command: "cobuilder",
             args: ["auth", "login"],
-            label: "OpenCode Login",
+            label: "CoBuilder Login",
           },
         }
       }
@@ -557,7 +557,7 @@ export namespace ACP {
         },
         authMethods: [authMethod],
         agentInfo: {
-          name: "OpenCode",
+          name: "CoBuilder",
           version: Installation.VERSION,
         },
       }
