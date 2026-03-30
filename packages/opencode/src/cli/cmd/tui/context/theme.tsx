@@ -36,6 +36,7 @@ import vercel from "./theme/vercel.json" with { type: "json" }
 import vesper from "./theme/vesper.json" with { type: "json" }
 import zenburn from "./theme/zenburn.json" with { type: "json" }
 import carbonfox from "./theme/carbonfox.json" with { type: "json" }
+import cobuilder from "./theme/cobuilder.json" with { type: "json" }
 import { useKV } from "./kv"
 import { useRenderer } from "@opentui/solid"
 import { createStore, produce } from "solid-js/store"
@@ -139,6 +140,7 @@ type ThemeJson = {
 }
 
 export const DEFAULT_THEMES: Record<string, ThemeJson> = {
+  cobuilder,
   aura,
   ayu,
   catppuccin,
@@ -292,7 +294,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
       themes: DEFAULT_THEMES,
       mode: lock ?? pick(kv.get("theme_mode", props.mode)) ?? props.mode,
       lock,
-      active: (config.theme ?? kv.get("theme", "opencode")) as string,
+      active: (config.theme ?? kv.get("theme", "cobuilder")) as string,
       ready: false,
     })
 
@@ -312,7 +314,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
           )
         })
         .catch(() => {
-          setStore("active", "opencode")
+          setStore("active", "cobuilder")
         })
         .finally(() => {
           if (store.active !== "system") {
@@ -333,7 +335,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
             if (store.active === "system") {
               setStore(
                 produce((draft) => {
-                  draft.active = "opencode"
+                  draft.active = "cobuilder"
                   draft.ready = true
                 }),
               )
@@ -382,7 +384,7 @@ export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
     })
 
     const values = createMemo(() => {
-      return resolveTheme(store.themes[store.active] ?? store.themes.opencode, store.mode)
+      return resolveTheme(store.themes[store.active] ?? store.themes.cobuilder, store.mode)
     })
 
     createEffect(() => {
