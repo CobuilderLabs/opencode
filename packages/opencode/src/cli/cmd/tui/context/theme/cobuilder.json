@@ -75,7 +75,11 @@
     "markdownLink": { "dark": "darkAccent", "light": "lightAccent" },
     "markdownCode": { "dark": "darkSecondary", "light": "lightSecondary" },
     "markdownCodeBlock": { "dark": "darkStep3", "light": "lightStep3" },
-    "markdownBlockquote": { "dark": "darkStep11", "light": "lightStep11" },
+    "markdownBlockQuote": { "dark": "darkOrange", "light": "lightOrange" },
+    "markdownEmph": { "dark": "darkOrange", "light": "lightOrange" },
+    "markdownStrong": { "dark": "darkOrange", "light": "lightOrange" },
+    "markdownLinkText": { "dark": "darkCyan", "light": "lightCyan" },
+    "markdownListItem": { "dark": "darkStep9", "light": "lightStep9" },
     "markdownHorizontalRule": { "dark": "darkStep7", "light": "lightStep7" },
     "markdownListEnumeration": { "dark": "darkStep9", "light": "lightStep9" },
     "markdownImage": { "dark": "darkOrange", "light": "lightOrange" },
@@ -87,6 +91,7 @@
     "syntaxType": { "dark": "#A78BFA", "light": "#7C3AED" },
     "syntaxComment": { "dark": "#475569", "light": "#94A3B8" },
     "syntaxVariable": { "dark": "#E2E8F0", "light": "#0F172A" },
-    "syntaxOperator": { "dark": "#94A3B8", "light": "#475569" }
+    "syntaxOperator": { "dark": "#94A3B8", "light": "#475569" },
+    "syntaxPunctuation": { "dark": "#94A3B8", "light": "#475569" }
   }
 }
